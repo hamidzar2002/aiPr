@@ -12,7 +12,7 @@ func main() {
 	chp2.RunChp22FNSingleDot()
 	chp2.RunChp22FNMultiDot()
 	chp2.RunChp23FNTrans()
-	//chp2.RunChp23FNBatch()
+	chp2.RunChp23FNBatch()
 
 	return
 
