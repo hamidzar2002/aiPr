@@ -1,7 +1,7 @@
 package main
 
 import "fmt"
-import chp3 "aiPr/chp3"
+import chp4 "aiPr/chp4"
 
 func main() {
 	fmt.Println("entry!")
@@ -15,7 +15,12 @@ func main() {
 	//chp2.RunChp23FNBatch()
 	//chp3.RunChp3InnerLayer()
 	//chp3.RunChp32TrainDraw()
-	chp3.RunChp32TrainDensLayer()
+	//chp3.RunChp32TrainDensLayer()
+	//chp4.RunReLUfunc1()
+	//	chp4.RunReLUfuncDense()
+	//chp4.RunSoftmax1()
+	//chp4.RunSoftmax2()
+	chp4.RunSoftmax3()
 
 	return
 

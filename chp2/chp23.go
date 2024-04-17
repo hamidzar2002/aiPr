@@ -39,7 +39,7 @@ func RunChp23FNBatch() {
 		-0.26, -0.27, 0.17, 0.87}
 	weights := t.New(t.WithShape(3, 4), t.WithBacking(rawWeights))
 	weights.T()
-	bias := []float32{2, 3, 0.5}
+	bias := []float64{2, 3, 0.5}
 
 	dot, err := t.Dot(inputs, weights)
 	fmt.Println(dot, err)
