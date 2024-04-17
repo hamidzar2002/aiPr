@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
-import chp4 "aiPr/chp4"
+import (
+	chp5 "aiPr/chp5"
+	"fmt"
+)
 
 func main() {
 	fmt.Println("entry!")
@@ -20,7 +22,10 @@ func main() {
 	//	chp4.RunReLUfuncDense()
 	//chp4.RunSoftmax1()
 	//chp4.RunSoftmax2()
-	chp4.RunSoftmax3()
+	//	chp4.RunSoftmax3()
+	//chp5.RunLossFunc1()
+	//	chp5.RunLossFunc2()
+	chp5.RunLossFunc3()
 
 	return
 
