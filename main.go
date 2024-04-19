@@ -22,10 +22,12 @@ func main() {
 	//	chp4.RunReLUfuncDense()
 	//chp4.RunSoftmax1()
 	//chp4.RunSoftmax2()
-	//	chp4.RunSoftmax3()
+	//chp4.RunSoftmax3()
 	//chp5.RunLossFunc1()
 	//	chp5.RunLossFunc2()
-	chp5.RunLossFunc3()
+	//chp5.RunLossFunc3()
+	//chp5.RunLossFunc4()
+	chp5.RunLossFunc5()
 
 	return
 
