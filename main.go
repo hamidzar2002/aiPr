@@ -1,7 +1,7 @@
 package main
 
 import (
-	chp5 "aiPr/chp5"
+	chp6 "aiPr/chp6"
 	"fmt"
 )
 
@@ -27,7 +27,10 @@ func main() {
 	//	chp5.RunLossFunc2()
 	//chp5.RunLossFunc3()
 	//chp5.RunLossFunc4()
-	chp5.RunLossFunc5()
+	//chp5.RunLossFunc5()
+	//chp6.RunOptFunc1()
+	//chp6.RunOptFunc2()
+	chp6.RunOptFunc3()
 
 	return
 

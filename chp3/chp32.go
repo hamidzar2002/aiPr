@@ -378,7 +378,7 @@ func getBacking(x [][]float64) (backing []float64) {
 }
 
 var X t.Tensor = t.New(t.WithShape(len(x), len(x[0])), t.WithBacking(getBacking(x)))
-var Y t.Tensor = t.New(t.WithShape(len(y), 1), t.WithBacking(y))
+var YY t.Tensor = t.New(t.WithShape(len(y), 1), t.WithBacking(y))
 
 func gettingData() {
 
