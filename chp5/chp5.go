@@ -169,6 +169,6 @@ func RunLossFunc5() {
 
 	fmt.Println(activation2.Output)
 
-	lss := loss.Calculate(activation2.Output, chp3.YY)
+	lss := loss.Calculate(activation2.Output, chp3.Yval)
 	fmt.Println(lss)
 }
