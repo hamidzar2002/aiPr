@@ -1,7 +1,7 @@
 package main
 
 import (
-	chp6 "aiPr/chp6"
+	"aiPr/chp6"
 	"fmt"
 )
 

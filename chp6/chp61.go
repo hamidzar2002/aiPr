@@ -182,7 +182,7 @@ func RunOptFunc3() {
 		}
 
 	}
-	fmt.Println(bestDense1Weights, bestDense2Weights, bestDense1Biases, bestDense2Biases)
+	fmt.Println("bestDense1Weights", bestDense1Weights, "\n bestDense2Weights", bestDense2Weights, "\n bestDense1Biases", bestDense1Biases, "\n bestDense2Biases", bestDense2Biases)
 }
 
 func handleErr(er error) {
