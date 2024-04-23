@@ -7,6 +7,8 @@ import (
 
 type ActivationReLU struct {
 	Output tensor.Tensor
+	Input  tensor.Tensor
+	DInput tensor.Tensor
 }
 
 func NewActivationReLU() ActivationReLU {
@@ -23,6 +25,27 @@ func (r *ActivationReLU) Forward(input tensor.Tensor) {
 		return
 	}
 	r.Output = output
+	r.Input = input
+}
+
+func (r *ActivationReLU) Backward(dvalues tensor.Tensor) {
+
+	var err error
+	//second way :
+	it := r.Input.Iterator()
+	drelu := dvalues.Clone().(tensor.Tensor)
+	for _, errr := it.Start(); errr == nil; _, errr = it.Next() {
+		val, _ := r.Input.At(it.Coord()...)
+		if val.(float64) <= 0 {
+			drelu.SetAt(0.0, it.Coord()...)
+		}
+	}
+
+	if err != nil {
+		fmt.Println("error", err)
+		return
+	}
+	r.DInput = drelu
 }
 
 type ActivationSoftMax struct {

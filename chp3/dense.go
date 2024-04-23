@@ -7,9 +7,13 @@ import (
 )
 
 type LayerDense struct {
-	Weights t.Tensor
-	Biases  []float64
-	Output  t.Tensor
+	Weights  t.Tensor
+	Biases   []float64
+	Output   t.Tensor
+	Input    t.Tensor
+	DInput   t.Tensor
+	DWeights t.Tensor
+	DBiases  []float64
 }
 
 func NewLayerDense(nInputs, nNeurons int) LayerDense {
@@ -33,7 +37,26 @@ func (l *LayerDense) Forward(inputs t.Tensor) {
 	handleErr(err)
 	l.Output, err = chp2.AddBiases(dp, l.Biases)
 	handleErr(err)
+	l.Input = inputs
 }
+
+func (l *LayerDense) Backward(dvalues t.Tensor) {
+	var err error
+	l.Input.T()
+	l.DWeights, err = t.Dot(l.Input, dvalues)
+	l.Input.T()
+	handleErr(err)
+
+	dbiases, err := t.Sum(dvalues, 0)
+	handleErr(err)
+	l.DBiases = dbiases.Data().([]float64)
+
+	l.Weights.T()
+	l.DInput, err = t.Dot(dvalues, l.Weights)
+	l.Weights.T()
+	handleErr(err)
+}
+
 func PrintOutput(startI, amount int, data t.Tensor) {
 	fmt.Print("[")
 	for i := startI; i < amount; i++ {

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aiPr/chp6"
+	"aiPr/chp9"
 	"fmt"
 )
 
@@ -30,7 +30,15 @@ func main() {
 	//chp5.RunLossFunc5()
 	//chp6.RunOptFunc1()
 	//chp6.RunOptFunc2()
-	chp6.RunOptFunc3()
+	//chp6.RunOptFunc3()
+	//chp7.RunImpFunc1()
+	//chp9.RunBackpropagationFunc1()
+	//chp9.RunBackpropagationMultiFunc2()
+	//chp9.RunBackpropagationMultiFunc3()
+	//chp9.RunBackpropagationBiasFunc4()
+	//chp9.RunBackpropagationReLUFunc5()
+	//	chp9.RunBackpropagationAllFunc6()
+	chp9.RunBackpropagationCalcFunc7()
 
 	return
 

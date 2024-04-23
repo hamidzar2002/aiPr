@@ -163,10 +163,8 @@ func RunLossFunc5() {
 	loss := Loss{}
 	dense1.Forward(chp3.X)
 	activation1.Forward(dense1.Output)
-
 	dense2.Forward(activation1.Output)
 	activation2.Forward(dense2.Output, 1)
-
 	fmt.Println(activation2.Output)
 
 	lss := loss.Calculate(activation2.Output, chp3.Yval)
