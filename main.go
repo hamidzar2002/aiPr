@@ -1,7 +1,6 @@
 package main
 
 import (
-	"aiPr/chp9"
 	"fmt"
 )
 
@@ -38,7 +37,10 @@ func main() {
 	//chp9.RunBackpropagationBiasFunc4()
 	//chp9.RunBackpropagationReLUFunc5()
 	//	chp9.RunBackpropagationAllFunc6()
-	chp9.RunBackpropagationCalcFunc7()
+	//chp9.RunBackpropagationCalcFunc7()
+	//chp9.RunBackpropagationLossFunc8()
+	//chp9.RunBackpropagationLossFunc9()
+	//chp9.RunFullTestwithLossFunc10()
 
 	return
 

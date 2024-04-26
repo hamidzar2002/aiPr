@@ -50,6 +50,7 @@ func (r *ActivationReLU) Backward(dvalues tensor.Tensor) {
 
 type ActivationSoftMax struct {
 	Output tensor.Tensor
+	DInput tensor.Tensor
 }
 
 func NewActivationSoftMax() ActivationSoftMax {
@@ -64,4 +65,13 @@ func (s *ActivationSoftMax) Forward(input tensor.Tensor, axis int) {
 		return
 	}
 	s.Output = output
+}
+func (s *ActivationSoftMax) Backward(input tensor.Tensor, grad tensor.Tensor, axis int) {
+
+	input, err := tensor.SoftMaxB(input, grad, axis)
+	if err != nil {
+		fmt.Println("error", err)
+		return
+	}
+	s.DInput = input
 }
