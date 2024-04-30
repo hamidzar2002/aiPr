@@ -1,6 +1,7 @@
 package main
 
 import (
+	"aiPr/chp10"
 	"fmt"
 )
 
@@ -41,7 +42,12 @@ func main() {
 	//chp9.RunBackpropagationLossFunc8()
 	//chp9.RunBackpropagationLossFunc9()
 	//chp9.RunFullTestwithLossFunc10()
-
+	//chp10.RunUpstreamTestFunc10()
+	//chp10.RunDecayFunc11()
+	//chp10.RunUpstreamTestwithDecayFunc12()
+	//chp10.RunUpstreamTestwithAdagradFunc13()
+	//chp10.RunUpstreamTestwithRMSpropFunc14()
+	chp10.RunUpstreamTestwithAdamFunc15()
 	return
 
 }

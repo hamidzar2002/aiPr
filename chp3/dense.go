@@ -7,13 +7,17 @@ import (
 )
 
 type LayerDense struct {
-	Weights  t.Tensor
-	Biases   []float64
-	Output   t.Tensor
-	Input    t.Tensor
-	DInput   t.Tensor
-	DWeights t.Tensor
-	DBiases  []float64
+	Weights         t.Tensor
+	Biases          []float64
+	Output          t.Tensor
+	Input           t.Tensor
+	DInput          t.Tensor
+	DWeights        t.Tensor
+	DBiases         []float64
+	BiasMomentums   []float64
+	WeightMomentums t.Tensor
+	BiasCache       []float64
+	WeightCache     t.Tensor
 }
 
 func NewLayerDense(nInputs, nNeurons int) LayerDense {

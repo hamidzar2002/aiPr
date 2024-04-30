@@ -141,7 +141,6 @@ func (ASL *ActivationSoftmaxLoss) Backward(dvalues tensor.Tensor, yTrue tensor.T
 	dinputs = dvalues.Clone().(tensor.Tensor)
 	for i := 0; i < samples; i++ {
 		valy := yyTrue.Get(i)
-		//	fmt.Println(i, valy)
 		idx := int(valy.(float64))
 		x, _ := dinputs.At(i, idx)
 		dinputs.SetAt(x.(float64)-1.0, i, idx)
@@ -180,7 +179,6 @@ func handleErr(er error) {
 
 func Accuracy(predictions []int, y []float64) float64 {
 	var correct int
-	//fmt.Println(predictions, y)
 	for i, pred := range predictions {
 		if float64(pred) == y[i] {
 			correct++
