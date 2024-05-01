@@ -171,9 +171,9 @@ func RunUpstreamTestwithAdamFunc15() {
 	//layer 2
 	dense2 := chp3.NewLayerDense(64, 3)
 	lossActiovatoin := chp5.NewActivationSoftmaxLoss()
-	optimizer := NewOptimizerAdam(0.02, 1e-5, 1e-7, 0.9, 0.999)
+	optimizer := NewOptimizerAdam(0.05, 5e-7, 1e-7, 0.009, 0.09)
 	var accuracy = float64(0)
-	for i := 1; i <= 109; i++ {
+	for i := 1; i <= 10009; i++ {
 
 		dense1.Forward(chp3.X)
 		activation1.Forward(dense1.Output)
@@ -186,15 +186,22 @@ func RunUpstreamTestwithAdamFunc15() {
 
 		////// backward
 		//fmt.Println(lossActiovatoin.ActivationSoftMax.Output, lossActiovatoin.Loss.DInputs)
+
 		lossActiovatoin.Backward(lossActiovatoin.ActivationSoftMax.Output, chp3.Yval)
+
 		dense2.Backward(lossActiovatoin.DInputs)
+		//if i == 10 {
+		//	fmt.Println("d1.dw", activation1.Output.Data())
+		//}
 		activation1.Backward(dense2.DInput)
+
 		dense1.Backward(activation1.DInput)
+
 		optimizer.PreUpdateParams()
-		dense1 = optimizer.UpdateParams2(dense1)
-		dense2 = optimizer.UpdateParams2(dense2)
+		dense1 = optimizer.UpdateParams(dense1)
+		dense2 = optimizer.UpdateParams(dense2)
 		optimizer.PostUpdateParams()
-		fmt.Println("ITERATION", i, lossActiovatoin.Loss.DataLoss)
+		//fmt.Println("ITERATION", i, lossActiovatoin.Loss.DataLoss)
 		if i%100 == 0 {
 			fmt.Println("step", i)
 			fmt.Println("loss", lossActiovatoin.Loss.DataLoss)

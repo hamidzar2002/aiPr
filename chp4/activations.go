@@ -24,8 +24,8 @@ func (r *ActivationReLU) Forward(input tensor.Tensor) {
 		fmt.Println("error", err)
 		return
 	}
-	r.Output = output
-	r.Input = input
+	r.Output = output.Clone().(tensor.Tensor)
+	r.Input = input.Clone().(tensor.Tensor)
 }
 
 func (r *ActivationReLU) Backward(dvalues tensor.Tensor) {
@@ -45,7 +45,7 @@ func (r *ActivationReLU) Backward(dvalues tensor.Tensor) {
 		fmt.Println("error", err)
 		return
 	}
-	r.DInput = drelu
+	r.DInput = drelu.Clone().(tensor.Tensor)
 }
 
 type ActivationSoftMax struct {
@@ -64,7 +64,7 @@ func (s *ActivationSoftMax) Forward(input tensor.Tensor, axis int) {
 		fmt.Println("error", err)
 		return
 	}
-	s.Output = output
+	s.Output = output.Clone().(tensor.Tensor)
 }
 func (s *ActivationSoftMax) Backward(input tensor.Tensor, grad tensor.Tensor, axis int) {
 
@@ -73,5 +73,5 @@ func (s *ActivationSoftMax) Backward(input tensor.Tensor, grad tensor.Tensor, ax
 		fmt.Println("error", err)
 		return
 	}
-	s.DInput = input
+	s.DInput = input.Clone().(tensor.Tensor)
 }

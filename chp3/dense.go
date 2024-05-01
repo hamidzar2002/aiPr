@@ -41,7 +41,7 @@ func (l *LayerDense) Forward(inputs t.Tensor) {
 	handleErr(err)
 	l.Output, err = chp2.AddBiases(dp, l.Biases)
 	handleErr(err)
-	l.Input = inputs
+	l.Input = inputs.Clone().(t.Tensor)
 }
 
 func (l *LayerDense) Backward(dvalues t.Tensor) {

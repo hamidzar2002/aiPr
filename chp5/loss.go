@@ -98,7 +98,7 @@ func (l *Loss) Backward(dvalues tensor.Tensor, yTrue tensor.Tensor) {
 	dinputs, err = tensor.Div(dinputs, float64(samples))
 	handleErr(err)
 
-	l.DInputs = dinputs
+	l.DInputs = dinputs.Clone().(tensor.Tensor)
 	//return dinputs.Data().([]float64)
 }
 
@@ -150,7 +150,7 @@ func (ASL *ActivationSoftmaxLoss) Backward(dvalues tensor.Tensor, yTrue tensor.T
 	dinputs, err = tensor.Div(dinputs, float64(samples))
 
 	handleErr(err)
-	ASL.DInputs = dinputs
+	ASL.DInputs = dinputs.Clone().(tensor.Tensor)
 }
 
 // mean calculates the mean of a slice of float64
