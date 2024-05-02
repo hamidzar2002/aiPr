@@ -277,283 +277,89 @@ type OptimizerAdam struct {
 	LearningRate        float64
 	CurrentLearningRate float64
 	Decay               float64
-	Iteration           float64
+	Iterations          int
 	Epsilon             float64
 	Beta1               float64
 	Beta2               float64
 }
 
-func NewOptimizerAdam(learningRate, decay, epsilon, beta1, beta2 float64) OptimizerAdam {
-	return OptimizerAdam{
+func NewOptimizerAdam(learningRate, decay, epsilon, beta1, beta2 float64) *OptimizerAdam {
+	return &OptimizerAdam{
 		LearningRate:        learningRate,
 		CurrentLearningRate: learningRate,
 		Decay:               decay,
-		Iteration:           0,
+		Iterations:          0,
 		Epsilon:             epsilon,
 		Beta1:               beta1,
 		Beta2:               beta2,
 	}
 }
 
-func (oad *OptimizerAdam) UpdateParamsOld(layer chp3.LayerDense) chp3.LayerDense {
+func (optimizer *OptimizerAdam) PreUpdateParams() {
+	if optimizer.Decay != 0 {
+		optimizer.CurrentLearningRate = optimizer.LearningRate / (1.0 + optimizer.Decay*float64(optimizer.Iterations))
+	}
+}
 
-	var weightMomentumCorrected, weightCacheCorrected tensor.Tensor
-	var biasMomentumCorrected, biasCacheCorrected []float64
-	var err error
-
-	// If layer does not contain cache arrays, create them filled with zeros
+func (optimizer *OptimizerAdam) UpdateParams(layer chp3.LayerDense) chp3.LayerDense {
+	var WeightMomentumsBk, WeightCacheBk []float64
 	if layer.WeightMomentums == nil {
-		weightMomentum := tensor.New(tensor.Of(tensor.Float64), tensor.WithShape(layer.Weights.Shape()...))
-		layer.WeightMomentums = weightMomentum
-		layer.WeightCache = tensor.New(tensor.Of(tensor.Float64), tensor.WithShape(layer.Weights.Shape()...))
+		WeightMomentumsBk = make([]float64, len(layer.Weights.Data().([]float64)))
+		WeightCacheBk = make([]float64, len(layer.Weights.Data().([]float64)))
 		layer.BiasMomentums = make([]float64, len(layer.Biases))
 		layer.BiasCache = make([]float64, len(layer.Biases))
+	} else {
+		WeightMomentumsBk = layer.WeightMomentums.Data().([]float64)
+		WeightCacheBk = layer.WeightCache.Data().([]float64)
+
 	}
 
-	// Update momentum with current gradients
-
-	WeightMomentumsDens := tensor.New(tensor.WithShape(layer.WeightMomentums.Shape()...), tensor.WithBacking(layer.WeightMomentums.Data()))
-	WeightMomentumsAdded, err := WeightMomentumsDens.MulScalar(oad.Beta1, false)
-	handleErr(err)
-	DWeightsDense := tensor.New(tensor.WithShape(layer.DWeights.Shape()...), tensor.WithBacking(layer.DWeights.Data()))
-	DWeightsDenseMul, err := DWeightsDense.MulScalar(1-oad.Beta1, false)
-	handleErr(err)
-
-	layer.WeightMomentums, err = tensor.Add(
-		WeightMomentumsAdded,
-		DWeightsDenseMul,
-	)
-	handleErr(err)
-
-	for i, _ := range layer.DBiases {
-		layer.BiasMomentums[i] = (oad.Beta1 * layer.BiasMomentums[i]) +
-			(1-oad.Beta1)*layer.DBiases[i]
+	for i, _ := range layer.Weights.Data().([]float64) {
+		// Update momentum with current gradients
+		WeightMomentumsBk[i] = optimizer.Beta1*WeightMomentumsBk[i] + (1-optimizer.Beta1)*layer.DWeights.Data().([]float64)[i]
+		// Get corrected momentum
+		// optimizer.Iteration is 0 at first pass
+		// and we need to start with 1 here
+		weightMomentumCorrected := WeightMomentumsBk[i] / (1 - math.Pow(optimizer.Beta1, float64(optimizer.Iterations+1)))
+		// Update cache with squared current gradients
+		WeightCacheBk[i] = optimizer.Beta2*WeightCacheBk[i] + (1-optimizer.Beta2)*math.Pow(layer.DWeights.Data().([]float64)[i], 2)
+		// Get corrected cache
+		weightCacheCorrected := WeightCacheBk[i] / (1 - math.Pow(optimizer.Beta2, float64(optimizer.Iterations+1)))
+		// Vanilla SGD parameter update + normalization with square rooted cache
+		//if weightCacheCorrected > 0 {
+		layer.Weights.Data().([]float64)[i] += (-optimizer.CurrentLearningRate * weightMomentumCorrected) / (math.Sqrt(math.Abs(weightCacheCorrected)) + optimizer.Epsilon)
+		//}
 	}
 
-	// Get corrected momentum
+	layer.WeightMomentums = tensor.New(tensor.WithShape(layer.Weights.Shape()...), tensor.WithBacking(WeightMomentumsBk))
+	layer.WeightCache = tensor.New(tensor.WithShape(layer.Weights.Shape()...), tensor.WithBacking(WeightCacheBk))
 
-	WeightMomentumsDens2 := tensor.New(tensor.WithShape(layer.WeightMomentums.Shape()...), tensor.WithBacking(layer.WeightMomentums.Data()))
-	weightMomentumCorrected, err = WeightMomentumsDens2.DivScalar(math.Pow(1-oad.Beta1, oad.Iteration+1), false)
-	handleErr(err)
+	for i, _ := range layer.Biases {
+		// Update momentum with current gradients
+		layer.BiasMomentums[i] = optimizer.Beta1*layer.BiasMomentums[i] + (1-optimizer.Beta1)*layer.DBiases[i]
+		// Get corrected momentum
+		// optimizer.Iteration is 0 at first pass
+		// and we need to start with 1 here
+		biasMomentumCorrected := layer.BiasMomentums[i] / (1 - math.Pow(optimizer.Beta1, float64(optimizer.Iterations+1)))
+		// Update cache with squared current gradients
+		layer.BiasCache[i] = optimizer.Beta2*layer.BiasCache[i] + (1-optimizer.Beta2)*math.Pow(layer.DBiases[i], 2)
+		// Get corrected cache
+		biasCacheCorrected := layer.BiasCache[i] / (1 - math.Pow(optimizer.Beta2, float64(optimizer.Iterations+1)))
+		// Vanilla SGD parameter update + normalization with square rooted cache
+		if (biasCacheCorrected) > 0 {
+			layer.Biases[i] += (-optimizer.CurrentLearningRate * biasMomentumCorrected) / (math.Sqrt(math.Abs(biasCacheCorrected)) + optimizer.Epsilon)
 
-	biasMomentumCorrected = make([]float64, len(layer.BiasMomentums))
-
-	for i, _ := range layer.BiasMomentums {
-		biasMomentumCorrected[i] = layer.BiasMomentums[i] / (math.Pow(1-oad.Beta1, oad.Iteration+1))
+		}
 	}
-
-	handleErr(err)
-
-	// Update cache with squared current gradients
-
-	dweightSquare, err := tensor.Square(layer.DWeights)
-	dweightSquareDens := tensor.New(tensor.WithShape(dweightSquare.Shape()...), tensor.WithBacking(dweightSquare.Data()))
-	dweightSquareMul, err := dweightSquareDens.MulScalar(1-oad.Beta2, false)
-	weightCacheDens := tensor.New(tensor.WithShape(layer.WeightCache.Shape()...), tensor.WithBacking(layer.WeightCache.Data()))
-	weightCacheMul, err := weightCacheDens.MulScalar(oad.Beta2, false)
-	handleErr(err)
-	layer.WeightCache, err = tensor.Add(
-		dweightSquareMul,
-		weightCacheMul,
-	)
-
-	handleErr(err)
-
-	layer.BiasCache = make([]float64, len(layer.DBiases))
-
-	for i, _ := range layer.DBiases {
-		layer.BiasCache[i] = (layer.BiasCache[i] * oad.Beta2) + ((1 - oad.Beta2) * math.Pow(layer.DBiases[i], 2))
-	}
-
-	// Get corrected cache
-
-	weightCacheCorrectedDens2 := tensor.New(tensor.WithShape(layer.WeightCache.Shape()...), tensor.WithBacking(layer.WeightCache.Data()))
-	weightCacheCorrected, err = weightCacheCorrectedDens2.DivScalar(math.Pow(1-oad.Beta2, oad.Iteration+1), false)
-	handleErr(err)
-
-	biasCacheCorrected = make([]float64, len(layer.BiasCache))
-
-	for i, _ := range layer.BiasCache {
-		biasCacheCorrected[i] = layer.BiasCache[i] / (math.Pow(1-oad.Beta2, oad.Iteration+1))
-	}
-
-	handleErr(err)
-
-	// Vanilla SGD parameter update + normalization with square rooted cache
-
-	WeightMomentumsDens3 := tensor.New(tensor.WithShape(weightMomentumCorrected.Shape()...), tensor.WithBacking(weightMomentumCorrected.Data()))
-	weightMomentumCorrectedMul, err := WeightMomentumsDens3.MulScalar(-oad.CurrentLearningRate, false)
-
-	weightCacheCorrectedSqt, err := tensor.Sqrt(weightCacheCorrected)
-	handleErr(err)
-	weightCacheCorrectedSqtDens := tensor.New(tensor.WithShape(weightCacheCorrectedSqt.Shape()...), tensor.WithBacking(weightCacheCorrectedSqt.Data()))
-	weightCacheCorrectedAdded, err := weightCacheCorrectedSqtDens.AddScalar(oad.Epsilon, false)
-	handleErr(err)
-
-	weightUpdates, err := tensor.Div(
-		weightMomentumCorrectedMul,
-		weightCacheCorrectedAdded,
-	)
-
-	handleErr(err)
-
-	layer.Weights, err = tensor.Add(layer.Weights, weightUpdates)
-	//fmt.Println(layer.Weights.Data())
-	handleErr(err)
-
-	for i := range layer.Biases {
-		layer.Biases[i] += (-oad.CurrentLearningRate * biasMomentumCorrected[i]) /
-			(math.Sqrt(biasCacheCorrected[i]) + oad.Epsilon)
-	}
-	handleErr(err)
-	//fmt.Println(layer.Biases)
+	//fmt.Println(layer.Weights.Data().([]float64)[0])
 	return layer
-
-}
-func (oad *OptimizerAdam) UpdateParams(layer chp3.LayerDense) chp3.LayerDense {
-
-	//var biasMomentumCorrected, biasCacheCorrected []float64
-	var err error
-
-	// If layer does not contain cache arrays, create them filled with zeros
-	if layer.WeightMomentums == nil {
-		weightMomentum := tensor.New(tensor.Of(tensor.Float64), tensor.WithShape(layer.Weights.Shape()...))
-		layer.WeightMomentums = weightMomentum
-		layer.WeightCache = tensor.New(tensor.Of(tensor.Float64), tensor.WithShape(layer.Weights.Shape()...))
-		layer.BiasMomentums = make([]float64, len(layer.Biases))
-		layer.BiasCache = make([]float64, len(layer.Biases))
-	}
-
-	// Update momentum with current gradients
-
-	//fmt.Println(mm, layer.DWeights)
-
-	WeightMomentumsBK := make([]float64, len(layer.WeightMomentums.Data().([]float64)))
-	copy(WeightMomentumsBK, layer.WeightMomentums.Data().([]float64))
-
-	DWeightsBK := make([]float64, len(layer.DWeights.Data().([]float64)))
-	copy(DWeightsBK, layer.DWeights.Data().([]float64))
-	a := 1 - oad.Beta1
-	for i, _ := range WeightMomentumsBK {
-		WeightMomentumsBK[i] = checkNum(WeightMomentumsBK[i]*oad.Beta1) + checkNum(DWeightsBK[i]*(a))
-	}
-
-	layer.WeightMomentums = tensor.New(tensor.WithShape(layer.WeightMomentums.Shape()...), tensor.WithBacking(WeightMomentumsBK))
-	//fmt.Println("5", layer.WeightMomentums.Data().([]float64)[0])
-
-	handleErr(err)
-
-	for i := range layer.BiasMomentums {
-		layer.BiasMomentums[i] = checkNum(oad.Beta1*layer.BiasMomentums[i] + a*layer.DBiases[i])
-	}
-
-	// Get corrected momentum
-
-	WeightMomentumsBK2 := make([]float64, len(layer.WeightMomentums.Data().([]float64)))
-	copy(WeightMomentumsBK2, layer.WeightMomentums.Data().([]float64))
-	x := 1 - oad.Beta1
-	y := oad.Iteration + 1
-	z := math.Pow(x, y)
-	for i, _ := range WeightMomentumsBK2 {
-		WeightMomentumsBK2[i] = (WeightMomentumsBK2[i]) / z
-	}
-	weightMomentumCorrected := tensor.New(tensor.WithShape(layer.WeightMomentums.Shape()...), tensor.WithBacking(WeightMomentumsBK2))
-
-	biasMomentumCorrected := make([]float64, len(layer.BiasMomentums))
-
-	for i, _ := range layer.BiasMomentums {
-		biasMomentumCorrected[i] = layer.BiasMomentums[i] / z
-	}
-
-	handleErr(err)
-	// Update cache with squared current gradients
-
-	WeightCacheBK := make([]float64, len(layer.WeightCache.Data().([]float64)))
-	copy(WeightCacheBK, layer.WeightCache.Data().([]float64))
-
-	//DWeightsBK2 := layer.DWeights.Data().([]float64)
-	b := 1 - oad.Beta2
-
-	for i, _ := range WeightCacheBK {
-		WeightCacheBK[i] = checkNum(WeightCacheBK[i]*oad.Beta2) + checkNum(math.Pow(DWeightsBK[i], 2)*b)
-
-	}
-
-	layer.WeightCache = tensor.New(tensor.WithShape(layer.WeightCache.Shape()...), tensor.WithBacking(WeightCacheBK))
-
-	layer.BiasCache = make([]float64, len(layer.DBiases))
-
-	for i, _ := range layer.DBiases {
-		layer.BiasCache[i] = checkNum(layer.BiasCache[i]*oad.Beta2) + checkNum(b*math.Pow(layer.DBiases[i], 2))
-	}
-
-	// Get corrected cache
-
-	WeightCachBK2 := make([]float64, len(layer.WeightCache.Data().([]float64)))
-	copy(WeightCachBK2, layer.WeightCache.Data().([]float64))
-
-	w := 1 - oad.Beta2
-	e := oad.Iteration + 1
-	q := math.Pow(w, e)
-	for i, _ := range WeightCachBK2 {
-		WeightCachBK2[i] = (WeightCachBK2[i]) / q
-	}
-	weightCacheCorrected := tensor.New(tensor.WithShape(layer.WeightCache.Shape()...), tensor.WithBacking(WeightCachBK2))
-
-	biasCacheCorrected := make([]float64, len(layer.BiasCache))
-	for i, _ := range layer.BiasCache {
-		biasCacheCorrected[i] = layer.BiasCache[i] / q
-	}
-
-	handleErr(err)
-	// Vanilla SGD parameter update + normalization with square rooted cache
-	WeightMomCorrectedBK2 := make([]float64, len(weightMomentumCorrected.Data().([]float64)))
-	copy(WeightMomCorrectedBK2, weightMomentumCorrected.Data().([]float64))
-
-	WeightCacheCorrectedBK2 := make([]float64, len(weightCacheCorrected.Data().([]float64)))
-	copy(WeightCacheCorrectedBK2, weightCacheCorrected.Data().([]float64))
-
-	WeightsBK2 := make([]float64, len(layer.Weights.Data().([]float64)))
-	copy(WeightsBK2, layer.Weights.Data().([]float64))
-
-	for i, _ := range WeightsBK2 {
-		WeightsBK2[i] += checkNum((WeightMomCorrectedBK2[i] * -oad.CurrentLearningRate)) /
-			checkNum((math.Sqrt(math.Abs(WeightCacheCorrectedBK2[i])) + oad.Epsilon))
-	}
-	layer.Weights = tensor.New(tensor.WithShape(layer.Weights.Shape()...), tensor.WithBacking(WeightsBK2))
-	for i := range layer.Biases {
-		layer.Biases[i] += checkNum(-oad.CurrentLearningRate*biasMomentumCorrected[i]) /
-			checkNum(math.Sqrt(math.Abs(biasCacheCorrected[i]))+oad.Epsilon)
-	}
-
-	//fmt.Println(layer.Biases)
-	handleErr(err)
-	//fmt.Println(layer.Biases)
-	return layer
-
 }
 
-func (oad *OptimizerAdam) PreUpdateParams() {
-	oad.CurrentLearningRate = oad.LearningRate * (1.0 / (1.0 + oad.Decay*oad.Iteration))
+func (optimizer *OptimizerAdam) PostUpdateParams() {
+	optimizer.Iterations++
 }
-
-func (oad *OptimizerAdam) PostUpdateParams() {
-	oad.Iteration++
-}
-
 func handleErr(er error) {
 	if er != nil {
 		fmt.Println("error", er)
 	}
-}
-
-func checkNum(x float64) float64 {
-	//if math.IsInf(x, 0) {
-	//	return 0.999999
-	//} else if x == 0 {
-	//	return 0.0000001
-	//} else if x == math.NaN() {
-	//	return 0.0000001
-	//}
-	return x
 }
