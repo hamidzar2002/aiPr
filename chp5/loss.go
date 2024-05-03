@@ -1,6 +1,7 @@
 package chp5
 
 import (
+	"aiPr/chp3"
 	"aiPr/chp4"
 	"fmt"
 	"gorgonia.org/tensor"
@@ -100,6 +101,39 @@ func (l *Loss) Backward(dvalues tensor.Tensor, yTrue tensor.Tensor) {
 
 	l.DInputs = dinputs.Clone().(tensor.Tensor)
 	//return dinputs.Data().([]float64)
+}
+func (l *Loss) RegularizationLoss(layer chp3.LayerDense) float64 {
+	var regularizationLoss float64
+
+	// L1 regularization - weights
+	if layer.WeightRegularizerL1 > 0 {
+		for _, weight := range layer.Weights.Data().([]float64) {
+			regularizationLoss += layer.WeightRegularizerL1 * math.Abs(weight)
+		}
+	}
+
+	// L2 regularization - weights
+	if layer.WeightRegularizerL2 > 0 {
+		for _, weight := range layer.Weights.Data().([]float64) {
+			regularizationLoss += layer.WeightRegularizerL2 * weight * weight
+		}
+	}
+
+	// L1 regularization - biases
+	if layer.BiasRegularizerL1 > 0 {
+		for _, bias := range layer.Biases {
+			regularizationLoss += layer.BiasRegularizerL1 * math.Abs(bias)
+		}
+	}
+
+	// L2 regularization - biases
+	if layer.BiasRegularizerL2 > 0 {
+		for _, bias := range layer.Biases {
+			regularizationLoss += layer.BiasRegularizerL2 * bias * bias
+		}
+	}
+
+	return regularizationLoss
 }
 
 func NewActivationSoftmaxLoss() ActivationSoftmaxLoss {
