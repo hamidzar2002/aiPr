@@ -47,7 +47,8 @@ func main() {
 	//chp10.RunUpstreamTestwithDecayFunc12()
 	//chp10.RunUpstreamTestwithAdagradFunc13()
 	//chp10.RunUpstreamTestwithRMSpropFunc14()
-	chp10.RunUpstreamTestwithAdamFunc15()
+	//chp10.RunUpstreamTestwithAdamFunc15()
+	chp10.RunUpstreamTestwithNewDataFunc16()
 	return
 
 }
