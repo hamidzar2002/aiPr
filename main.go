@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aiPr/chp14"
+	"aiPr/chp15"
 	"fmt"
 )
 
@@ -49,7 +49,9 @@ func main() {
 	//chp10.RunUpstreamTestwithRMSpropFunc14()
 	//chp10.RunUpstreamTestwithAdamFunc15()
 	//chp10.RunUpstreamTestwithNewDataFunc16()
-	chp14.RunRegulizerFunc1()
+	//chp14.RunRegulizerFunc1()
+	//chp14.RunRegulizerIncreaseNodesFunc1()
+	chp15.RunDropoutFunc1()
 	return
 
 }
