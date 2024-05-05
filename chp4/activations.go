@@ -3,6 +3,7 @@ package chp4
 import (
 	"fmt"
 	"gorgonia.org/tensor"
+	"math"
 )
 
 type ActivationReLU struct {
@@ -74,4 +75,38 @@ func (s *ActivationSoftMax) Backward(input tensor.Tensor, grad tensor.Tensor, ax
 		return
 	}
 	s.DInput = input.Clone().(tensor.Tensor)
+}
+
+type ActivationSigmoid struct {
+	Outputs tensor.Tensor
+	DInputs tensor.Tensor
+	Inputs  tensor.Tensor
+}
+
+func NewActivationSigmoid() ActivationSigmoid {
+	return ActivationSigmoid{Outputs: tensor.New(tensor.Of(tensor.Float64))}
+}
+
+func (as *ActivationSigmoid) Forward(input tensor.Tensor) {
+
+	as.Inputs = input
+	inputsBk := as.Inputs.Data().([]float64)
+	OutputsBk := make([]float64, len(inputsBk))
+	for i := range inputsBk {
+		OutputsBk[i] = 1 / (1 + math.Exp(-inputsBk[i]))
+	}
+
+	as.Outputs = tensor.New(tensor.WithShape(as.Inputs.Shape()...), tensor.WithBacking(OutputsBk))
+}
+func (as *ActivationSigmoid) Backward(dValues tensor.Tensor) {
+
+	as.DInputs = dValues
+	OutputsBk := as.Outputs.Data().([]float64)
+	dValuesBk := dValues.Data().([]float64)
+	DInputsBk := as.DInputs.Data().([]float64)
+
+	for i, val := range dValuesBk {
+		DInputsBk[i] = val * (1 - OutputsBk[i]) * OutputsBk[i]
+	}
+	as.DInputs = tensor.New(tensor.WithShape(dValues.Shape()...), tensor.WithBacking(DInputsBk))
 }

@@ -11,10 +11,10 @@ import (
 func RunLossFunc1() {
 	//softmaxOutput := []float64{0.7, 0.1, 0.2}
 	//targetOutput := []float64{1, 0, 0}
-	//los := -(math.Log(softmaxOutput[0])*targetOutput[0] +
-	//	math.Log(softmaxOutput[1])*targetOutput[1] +
-	//	math.Log(softmaxOutput[2])*targetOutput[2])
-	// /*or it can be */ los := -(math.Log(softmaxOutput[0])
+	//los := -((softmaxOutput[0])*targetOutput[0] +
+	//	(softmaxOutput[1])*targetOutput[1] +
+	//	(softmaxOutput[2])*targetOutput[2])
+	// /*or it can be */ los := -((softmaxOutput[0])
 	//fmt.Println(los)
 	softmaxOutput := [][]float64{
 		{0.7, 0.1, 0.2},

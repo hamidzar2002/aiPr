@@ -62,6 +62,7 @@ func (l *LayerDense) Forward(inputs t.Tensor) {
 	l.Output, err = chp2.AddBiases(dp, l.Biases)
 	handleErr(err)
 	l.Input = inputs.Clone().(t.Tensor)
+
 }
 
 func (l *LayerDense) Backward(dvalues t.Tensor) {
@@ -105,10 +106,60 @@ func (l *LayerDense) Backward(dvalues t.Tensor) {
 	}
 
 	//
+	//fmt.Println(dvalues.Shape(),l.Weights)
+
 	l.Weights.T()
-	l.DInput, err = t.Dot(dvalues, l.Weights)
+	if dvalues.Shape()[1] == 1 && l.Weights.Shape()[0] == 1 {
+		dvBk := TensorToFloat64Slice(dvalues.(*t.Dense))
+		wBk := TensorToFloat64Slice(l.Weights.(*t.Dense))
+		res := flatten(dot(dvBk, wBk))
+		l.DInput = t.New(t.WithShape(dvalues.Shape()[0], l.Weights.Shape()[1]), t.WithBacking(res))
+
+	} else {
+		l.DInput, err = t.Dot(dvalues, l.Weights)
+	}
+
 	l.Weights.T()
 	handleErr(err)
+}
+
+func dot(a, b [][]float64) [][]float64 {
+	rowsA, colsA := len(a), len(a[0])
+	rowsB, colsB := len(b), len(b[0])
+
+	if colsA != rowsB {
+		panic("Number of columns in the first matrix must be equal to the number of rows in the second matrix")
+	}
+
+	result := make([][]float64, rowsA)
+	for i := range result {
+		result[i] = make([]float64, colsB)
+	}
+
+	for i := 0; i < rowsA; i++ {
+		for j := 0; j < colsB; j++ {
+			sum := 0.0
+			for k := 0; k < colsA; k++ {
+				sum += a[i][k] * b[k][j]
+			}
+			result[i][j] = sum
+		}
+	}
+	return result
+}
+
+func flatten(matrix [][]float64) []float64 {
+	rows := len(matrix)
+	cols := len(matrix[0])
+
+	result := make([]float64, rows*cols)
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			result[i*cols+j] = matrix[i][j]
+		}
+	}
+	return result
 }
 
 func applyOneLikeAndNegetiveOneTensor(weights t.Tensor) *t.Dense {
@@ -153,4 +204,16 @@ func PrintOutput(startI, amount int, data t.Tensor) {
 
 	}
 	fmt.Println("]")
+}
+
+func TensorToFloat64Slice(t *t.Dense) [][]float64 {
+	data := make([][]float64, t.Shape()[0])
+	for i := 0; i < t.Shape()[0]; i++ {
+		data[i] = make([]float64, t.Shape()[1])
+		for j := 0; j < t.Shape()[1]; j++ {
+			n, _ := t.At(i, j)
+			data[i][j] = n.(float64)
+		}
+	}
+	return data
 }
