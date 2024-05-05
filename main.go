@@ -1,7 +1,7 @@
 package main
 
 import (
-	"aiPr/chp16"
+	"aiPr/chp17"
 	"fmt"
 )
 
@@ -53,7 +53,8 @@ func main() {
 	//chp14.RunRegulizerIncreaseNodesFunc1()
 	//chp15.RunDropoutFunc1()
 	//chp16.RunRegressionFunc1()
-	chp16.RunRegressionFunc2()
+	//chp16.RunRegressionFunc2()
+	chp17.RunLinearActFunc2()
 	return
 
 }
