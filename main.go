@@ -54,7 +54,9 @@ func main() {
 	//chp15.RunDropoutFunc1()
 	//chp16.RunRegressionFunc1()
 	//chp16.RunRegressionFunc2()
-	chp17.RunLinearActFunc2()
+	//chp17.RunLinearActFunc2()
+	chp17.RunLinearActFunc3()
+
 	return
 
 }

@@ -110,3 +110,22 @@ func (as *ActivationSigmoid) Backward(dValues tensor.Tensor) {
 	}
 	as.DInputs = tensor.New(tensor.WithShape(dValues.Shape()...), tensor.WithBacking(DInputsBk))
 }
+
+type ActivationLinear struct {
+	Outputs tensor.Tensor
+	DInputs tensor.Tensor
+	Inputs  tensor.Tensor
+}
+
+func NewActivationLinear() ActivationLinear {
+	return ActivationLinear{Outputs: tensor.New(tensor.Of(tensor.Float64))}
+}
+
+func (as *ActivationLinear) Forward(input tensor.Tensor) {
+	as.Inputs = input
+	as.Outputs = input
+}
+func (as *ActivationLinear) Backward(dValues tensor.Tensor) {
+	as.DInputs = dValues.Clone().(tensor.Tensor)
+
+}

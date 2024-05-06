@@ -22,6 +22,16 @@ type BinaryCrossentropyLoss struct {
 	DataLoss float64
 	Loss     Loss
 }
+type MeanSquaredErrorLoss struct {
+	DInputs  tensor.Tensor
+	DataLoss float64
+	Loss     Loss
+}
+type MeanAbsoluteErrorLoss struct {
+	DInputs  tensor.Tensor
+	DataLoss float64
+	Loss     Loss
+}
 
 // Calculate method calculates the data and regularization losses
 // given model output and ground truth values
@@ -208,8 +218,6 @@ func (BCL *BinaryCrossentropyLoss) Forward(yPred tensor.Tensor, yTrue tensor.Ten
 		sampleLossesBk[i] = -(yTrueBk[i] * math.Log(predictedValsBacking[i])) +
 			((1 - yTrueBk[i]) * math.Log(1-predictedValsBacking[i]))
 	}
-	//fmt.Println(predictedValsBacking[120], sampleLossesBk[120])
-
 	samplpeLoss := tensor.New(tensor.WithShape(yTrue.Shape()...), tensor.WithBacking(sampleLossesBk))
 	sampleLossesBk = meanAlongLastAxis(TensorToFloat64Slice(samplpeLoss))
 
@@ -240,6 +248,99 @@ func (BCL *BinaryCrossentropyLoss) Backward(dvalues tensor.Tensor, yTrue tensor.
 
 	BCL.DInputs = tensor.New(tensor.WithShape(dinputs.Shape()...), tensor.WithBacking(dInputsBk))
 	//fmt.Println(dInputsBk[120])
+	handleErr(err)
+}
+
+func NewMeanSquaredErrorLoss() MeanSquaredErrorLoss {
+
+	var loss Loss
+	return MeanSquaredErrorLoss{Loss: loss}
+}
+
+func (MSE *MeanSquaredErrorLoss) Forward(yPred tensor.Tensor, yTrue tensor.Tensor) float64 {
+
+	predictedValsBacking := yPred.Data().([]float64)
+
+	yTrueBk := yTrue.Data().([]float64)
+	sampleLossesBk := make([]float64, yPred.Shape()[0])
+	for i := range predictedValsBacking {
+		sampleLossesBk[i] = math.Pow(yTrueBk[i]-predictedValsBacking[i], 2)
+	}
+	samplpeLoss := tensor.New(tensor.WithShape(yTrue.Shape()...), tensor.WithBacking(sampleLossesBk))
+	sampleLossesBk = meanAlongLastAxis(TensorToFloat64Slice(samplpeLoss))
+
+	MSE.DataLoss = mean(sampleLossesBk)
+
+	return MSE.DataLoss
+
+}
+
+func (MSE *MeanSquaredErrorLoss) Backward(dvalues tensor.Tensor, yTrue tensor.Tensor) {
+
+	var err error
+
+	sample := dvalues.Shape()[0]
+	outputs := dvalues.Shape()[1]
+	//clippedDvalues := clip(dvalues, 1e-7, 1-1e-7)
+	//clippedDvaluesBk := dvalues.Data().([]float64)
+
+	dinputs := dvalues.Clone().(tensor.Tensor)
+	dvaluesBk := dvalues.Data().([]float64)
+	yTrueBk := yTrue.Data().([]float64)
+	dInputsBk := make([]float64, len(dvaluesBk))
+
+	for i := range dvaluesBk {
+		dInputsBk[i] = (-2 * (yTrueBk[i] - dvaluesBk[i])) / float64(outputs)
+		dInputsBk[i] = dInputsBk[i] / float64(sample)
+	}
+
+	MSE.DInputs = tensor.New(tensor.WithShape(dinputs.Shape()...), tensor.WithBacking(dInputsBk))
+	handleErr(err)
+}
+func NewMeanAbsoluteErrorLoss() MeanAbsoluteErrorLoss {
+
+	var loss Loss
+	return MeanAbsoluteErrorLoss{Loss: loss}
+}
+
+func (MAE *MeanAbsoluteErrorLoss) Forward(yPred tensor.Tensor, yTrue tensor.Tensor) float64 {
+
+	predictedValsBacking := yPred.Data().([]float64)
+
+	yTrueBk := yTrue.Data().([]float64)
+	sampleLossesBk := make([]float64, yPred.Shape()[0])
+	for i := range predictedValsBacking {
+		sampleLossesBk[i] = math.Abs(yTrueBk[i] - predictedValsBacking[i])
+	}
+	samplpeLoss := tensor.New(tensor.WithShape(yTrue.Shape()...), tensor.WithBacking(sampleLossesBk))
+	sampleLossesBk = meanAlongLastAxis(TensorToFloat64Slice(samplpeLoss))
+
+	MAE.DataLoss = mean(sampleLossesBk)
+
+	return MAE.DataLoss
+
+}
+
+func (MAE *MeanAbsoluteErrorLoss) Backward(dvalues tensor.Tensor, yTrue tensor.Tensor) {
+
+	var err error
+
+	sample := dvalues.Shape()[0]
+	outputs := dvalues.Shape()[1]
+	//clippedDvalues := clip(dvalues, 1e-7, 1-1e-7)
+	//clippedDvaluesBk := dvalues.Data().([]float64)
+
+	dinputs := dvalues.Clone().(tensor.Tensor)
+	dvaluesBk := dvalues.Data().([]float64)
+	yTrueBk := yTrue.Data().([]float64)
+	dInputsBk := make([]float64, len(dvaluesBk))
+	dInputsBk = signSubtract(yTrueBk, dvaluesBk)
+	for i := range dvaluesBk {
+		dInputsBk[i] = dInputsBk[i] / float64(outputs)
+		dInputsBk[i] = dInputsBk[i] / float64(sample)
+	}
+
+	MAE.DInputs = tensor.New(tensor.WithShape(dinputs.Shape()...), tensor.WithBacking(dInputsBk))
 	handleErr(err)
 }
 
@@ -361,4 +462,49 @@ func AccuracyByTensor(predictions, y *tensor.Dense) float64 {
 	accuracy := correct / total
 
 	return accuracy
+}
+
+func AccuracyByRegression(preds, yTrue tensor.Tensor, accuracyPrecision float64) float64 {
+	count := 0
+	predictions := preds.Data().([]float64)
+	y := yTrue.Data().([]float64)
+	if yTrue.Shape()[1] == 1 {
+		for i := range predictions {
+			if math.Abs(predictions[i]-y[i]) < accuracyPrecision {
+				count++
+			}
+		}
+	}
+
+	return float64(count) / float64(len(predictions))
+}
+
+func signSubtract(yTrue, dValues []float64) []float64 {
+	result := make([]float64, len(yTrue))
+	for i := 0; i < len(yTrue); i++ {
+		if math.Signbit(yTrue[i] - dValues[i]) {
+			result[i] = -1
+		} else if yTrue[i] == dValues[i] {
+			result[i] = 0
+		} else {
+			result[i] = 1
+		}
+	}
+	return result
+}
+
+func StdDev(y []float64) float64 {
+	sum := 0.0
+	for _, v := range y {
+		sum += v
+	}
+	mean := sum / float64(len(y))
+
+	variance := 0.0
+	for _, v := range y {
+		variance += math.Pow(v-mean, 2)
+	}
+	variance /= float64(len(y))
+
+	return math.Sqrt(variance)
 }

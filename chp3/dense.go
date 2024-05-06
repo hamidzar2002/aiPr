@@ -57,8 +57,20 @@ func NewLayerDense(nInputs int, nNeurons int, Regulizer ...float64) LayerDense {
 }
 
 func (l *LayerDense) Forward(inputs t.Tensor) {
-	dp, err := t.Dot(inputs, l.Weights)
-	handleErr(err)
+	var dp t.Tensor
+	var err error
+	if inputs.Shape()[1] == 1 && l.Weights.Shape()[0] == 1 {
+
+		inpBk := TensorToFloat64Slice(inputs.(*t.Dense))
+		wBk := TensorToFloat64Slice(l.Weights.(*t.Dense))
+		res := flatten(dot(inpBk, wBk))
+		dp = t.New(t.WithShape(inputs.Shape()[0], l.Weights.Shape()[1]), t.WithBacking(res))
+
+	} else {
+		dp, err = t.Dot(inputs, l.Weights)
+		handleErr(err)
+	}
+
 	l.Output, err = chp2.AddBiases(dp, l.Biases)
 	handleErr(err)
 	l.Input = inputs.Clone().(t.Tensor)
