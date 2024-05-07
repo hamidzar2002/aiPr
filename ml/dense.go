@@ -1,10 +1,16 @@
-package chp3
+package ml
 
 import (
-	"aiPr/chp2"
 	"fmt"
 	t "gorgonia.org/tensor"
+	"reflect"
 )
+
+type Layer interface {
+	Backward(dvalues t.Tensor)
+	Forward(input t.Tensor)
+	GetOutput() *t.Tensor
+}
 
 type LayerDense struct {
 	Weights             t.Tensor
@@ -24,7 +30,7 @@ type LayerDense struct {
 	BiasRegularizerL2   float64
 }
 
-func NewLayerDense(nInputs int, nNeurons int, Regulizer ...float64) LayerDense {
+func NewLayerDense(nInputs int, nNeurons int, Regulizer ...float64) *LayerDense {
 
 	weights := t.New(
 		t.WithShape(nInputs, nNeurons),
@@ -45,7 +51,7 @@ func NewLayerDense(nInputs int, nNeurons int, Regulizer ...float64) LayerDense {
 		panic("not enough Regularizers has been set, they must be 4 ")
 	}
 
-	return LayerDense{
+	return &LayerDense{
 		Weights:             weights,
 		Biases:              biases,
 		WeightRegularizerL1: weightRegularizerL1,
@@ -71,7 +77,7 @@ func (l *LayerDense) Forward(inputs t.Tensor) {
 		handleErr(err)
 	}
 
-	l.Output, err = chp2.AddBiases(dp, l.Biases)
+	l.Output, err = AddBiases(dp, l.Biases)
 	handleErr(err)
 	l.Input = inputs.Clone().(t.Tensor)
 
@@ -133,6 +139,9 @@ func (l *LayerDense) Backward(dvalues t.Tensor) {
 
 	l.Weights.T()
 	handleErr(err)
+}
+func (l *LayerDense) GetOutput() *t.Tensor {
+	return &l.Output
 }
 
 func dot(a, b [][]float64) [][]float64 {
@@ -228,4 +237,42 @@ func TensorToFloat64Slice(t *t.Dense) [][]float64 {
 		}
 	}
 	return data
+}
+
+type LayerInput struct {
+	Inputs  t.Tensor
+	Outputs t.Tensor
+}
+
+func (li *LayerInput) Forward(inputs t.Tensor) {
+	li.Outputs = inputs
+}
+func (li *LayerInput) Backward(inputs t.Tensor) {
+	return
+}
+func (li *LayerInput) GetOutput() *t.Tensor {
+	return &li.Outputs
+}
+
+type LayerStruct struct {
+	prev  interface{}
+	next  interface{}
+	layer interface{}
+}
+
+func (ls *LayerStruct) Forward(inputs t.Tensor) {
+
+}
+func (ls *LayerStruct) Backward(inputs t.Tensor) {
+	return
+}
+func (ls *LayerStruct) GetOutput() *t.Tensor {
+
+	t := reflect.TypeOf(ls.layer)
+	if t.String() == "LayerDense" {
+		out := ls.layer.(LayerDense).Output
+		return &out
+	}
+	return nil
+
 }

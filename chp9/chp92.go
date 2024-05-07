@@ -2,8 +2,6 @@ package chp9
 
 import (
 	"aiPr/chp2"
-	"aiPr/chp3"
-	"aiPr/chp4"
 	"fmt"
 	"gorgonia.org/tensor"
 )
@@ -202,12 +200,12 @@ func RunBackpropagationCalcFunc7() {
 	weights := tensor.New(tensor.WithShape(3, 4), tensor.WithBacking(weightsB))
 
 	//define layers
-	dens := chp3.LayerDense{
+	dens := ml.LayerDense{
 		Input:   inputs,
 		Weights: weights,
 		Biases:  biasB,
 	}
-	act := chp4.NewActivationReLU()
+	act := ml.NewActivationReLU()
 	//start forwarding
 	dens.Weights.T()
 	dens.Forward(inputs)

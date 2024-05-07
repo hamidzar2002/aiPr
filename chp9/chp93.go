@@ -1,9 +1,6 @@
 package chp9
 
 import (
-	"aiPr/chp3"
-	"aiPr/chp4"
-	"aiPr/chp5"
 	"fmt"
 	"gorgonia.org/tensor"
 )
@@ -55,19 +52,19 @@ func RunBackpropagationLossFunc9() {
 	classTargets := tensor.New(tensor.WithShape(3, 1), tensor.WithBacking(classTargetsB))
 
 	//use one object loss backward then softmax  activation  backward
-	softmaxLoss := chp5.NewActivationSoftmaxLoss()
+	softmaxLoss := ml.NewActivationSoftmaxLoss()
 	softmaxLoss.Backward(softmaxOutputs, classTargets)
 	dvalues1 := softmaxLoss.DInputs
 	fmt.Println("Gradients: combined loss and activation:", dvalues1)
 
 	//use separate loss backward then softmax  activation  backward
-	activation := chp4.ActivationSoftMax{
+	activation := ml.ActivationSoftMax{
 		Output: softmaxOutputs,
 	}
-	loss := chp5.Loss{}
+	loss := ml.NormalLoss{}
 	loss.Backward(softmaxOutputs, classTargets)
 	//fmt.Println(softmaxOutputs, loss.DInputs)
-	activation.Backward(softmaxOutputs, loss.DInputs, 1)
+	activation.Backward(loss.DInputs)
 	dvalues2 := activation.DInput
 
 	fmt.Println("Gradients: separate loss and activation:", dvalues2)
@@ -79,26 +76,26 @@ func RunFullTestwithLossFunc10() {
 
 	///////forwarding
 	//layer 1
-	dense1 := chp3.NewLayerDense(2, 3)
-	activation1 := chp4.NewActivationReLU()
+	dense1 := ml.NewLayerDense(2, 3)
+	activation1 := ml.NewActivationReLU()
 	//layer 2
-	dense2 := chp3.NewLayerDense(3, 3)
-	lossActiovatoin := chp5.NewActivationSoftmaxLoss()
+	dense2 := ml.NewLayerDense(3, 3)
+	lossActiovatoin := ml.NewActivationSoftmaxLoss()
 
-	dense1.Forward(chp3.X)
+	dense1.Forward(ml.X)
 	activation1.Forward(dense1.Output)
 	dense2.Forward(activation1.Output)
-	lossActiovatoin.Forward(dense2.Output, chp3.Yval)
+	lossActiovatoin.Forward(dense2.Output, ml.Yval)
 	l1 := lossActiovatoin.Loss.DataLoss
 	fmt.Println("loss", lossActiovatoin.Loss.DataLoss)
 	/////// calculate accuracy
 	predictions, _ := tensor.Argmax(lossActiovatoin.ActivationSoftMax.Output, 1)
-	accuracy := chp5.Accuracy(predictions.Data().([]int), chp3.Yval.Data().([]float64))
+	accuracy := ml.Accuracy(predictions.Data().([]int), ml.Yval.Data().([]float64))
 	fmt.Println("acc", accuracy)
 	//	panic(1)
 	////// backward
 	fmt.Println(lossActiovatoin.ActivationSoftMax.Output, lossActiovatoin.Loss.DInputs)
-	lossActiovatoin.Backward(lossActiovatoin.ActivationSoftMax.Output, chp3.Yval)
+	lossActiovatoin.Backward(lossActiovatoin.ActivationSoftMax.Output, ml.Yval)
 	dense2.Backward(lossActiovatoin.DInputs)
 	activation1.Backward(dense2.DInput)
 
@@ -119,15 +116,15 @@ func RunFullTestwithLossFunc10() {
 	fmt.Println("dense2.DWeights", dense2.Weights)
 	fmt.Println("dense1.DBiases", dense1.Biases)
 
-	dense1.Forward(chp3.X)
+	dense1.Forward(ml.X)
 	activation1.Forward(dense1.Output)
 	dense2.Forward(activation1.Output)
-	lossActiovatoin.Forward(dense2.Output, chp3.Yval)
+	lossActiovatoin.Forward(dense2.Output, ml.Yval)
 	l2 := lossActiovatoin.Loss.DataLoss
 	fmt.Println("loss", lossActiovatoin.Loss.DataLoss)
 	/////// calculate accuracy
 	predictions, _ = tensor.Argmax(lossActiovatoin.ActivationSoftMax.Output, 1)
-	accuracy = chp5.Accuracy(predictions.Data().([]int), chp3.Yval.Data().([]float64))
+	accuracy = ml.Accuracy(predictions.Data().([]int), ml.Yval.Data().([]float64))
 	fmt.Println("accuracy", accuracy)
 	fmt.Println("opt", l1-l2)
 

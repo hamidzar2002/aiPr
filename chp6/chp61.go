@@ -1,9 +1,6 @@
 package chp6
 
 import (
-	"aiPr/chp3"
-	"aiPr/chp4"
-	"aiPr/chp5"
 	"fmt"
 	gp "gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
@@ -63,12 +60,12 @@ func RunOptFunc1() {
 
 func RunOptFunc2() {
 	//layer 1
-	dense1 := chp3.NewLayerDense(2, 3)
-	activation1 := chp4.NewActivationReLU()
+	dense1 := ml.NewLayerDense(2, 3)
+	activation1 := ml.NewActivationReLU()
 	//layer 2
-	dense2 := chp3.NewLayerDense(3, 3)
-	activation2 := chp4.NewActivationSoftMax()
-	loss := chp5.Loss{}
+	dense2 := ml.NewLayerDense(3, 3)
+	activation2 := ml.NewActivationSoftMax()
+	loss := ml.Loss{}
 	dense1.Forward(TX)
 	activation1.Forward(dense1.Output)
 
@@ -86,16 +83,16 @@ func RunOptFunc3() {
 
 	// Helper variables
 	lowestLoss := 9999999.0
-	activation1 := chp4.NewActivationReLU()
-	activation2 := chp4.NewActivationSoftMax()
+	activation1 := ml.NewActivationReLU()
+	activation2 := ml.NewActivationSoftMax()
 
 	// Initialize best weights and biases
 	var bestDense1Weights t.Tensor //:= t.New(t.WithShape(2, 3), t.Of(t.Float64), t.WithBacking(randMat64(2, 3, 1)))
 	var bestDense1Biases []float64
 	var bestDense2Weights t.Tensor // := t.New(t.WithShape(3, 3), t.Of(t.Float64), t.WithBacking(randMat64(3, 3, 1)))
 	var bestDense2Biases []float64
-	dense1 := chp3.NewLayerDense(2, 3)
-	dense2 := chp3.NewLayerDense(3, 3)
+	dense1 := ml.NewLayerDense(2, 3)
+	dense2 := ml.NewLayerDense(3, 3)
 	var dense1Weights t.Tensor
 	var dense2Weights t.Tensor
 	var dense1Biases []float64
@@ -147,14 +144,14 @@ func RunOptFunc3() {
 		}(dense2.Biases, dense2Biases)
 
 		dense1.Forward(TX)
-		//dense1.Forward(chp3.X)
+		//dense1.Forward(ml.X)
 		activation1.Forward(dense1.Output)
 		dense2.Forward(activation1.Output)
 		activation2.Forward(dense2.Output, 1)
 
-		loss := chp5.Loss{}
+		loss := ml.Loss{}
 		lss := loss.Calculate(activation2.Output, TYY)
-		//lss := loss.Calculate(activation2.Output, chp3.YY)
+		//lss := loss.Calculate(activation2.Output, ml.YY)
 		//fmt.Println(lss)
 
 		predictions, _ := t.Argmax(activation2.Output, 1)

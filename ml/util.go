@@ -1,4 +1,4 @@
-package chp2
+package ml
 
 import (
 	t "gorgonia.org/tensor"

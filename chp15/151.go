@@ -1,10 +1,7 @@
 package chp15
 
 import (
-	"aiPr/chp10"
-	"aiPr/chp3"
-	"aiPr/chp4"
-	"aiPr/chp5"
+	"aiPr/ml"
 	"fmt"
 	"gorgonia.org/tensor"
 )
@@ -12,28 +9,28 @@ import (
 func RunDropoutFunc1() {
 	///////forwarding
 	//layer 1
-	dense1 := chp3.NewLayerDense(2, 512, 0, 5e-4, 0, 5e-4)
-	activation1 := chp4.NewActivationReLU()
+	dense1 := ml.NewLayerDense(2, 512, 0, 5e-4, 0, 5e-4)
+	activation1 := ml.NewActivationReLU()
 
 	//dropout added here !!!!
 	dropout1 := NewDropout(0.1)
 	//layer 2
-	dense2 := chp3.NewLayerDense(512, 3)
-	lossActiovatoin := chp5.NewActivationSoftmaxLoss()
-	optimizer := chp10.NewOptimizerAdam(0.05, 5e-5, 1e-7, 0.9, 0.999)
+	dense2 := ml.NewLayerDense(512, 3)
+	lossActiovatoin := ml.NewActivationSoftmaxLoss()
+	optimizer := ml.NewOptimizerAdam(0.05, 5e-5, 1e-7, 0.9, 0.999)
 	//optimizer2 := NewOptimizerAdam(0.02, 5e-7, 1e-7, 0.009, 0.000999)
 	var accuracy = float64(0)
 	for i := 1; i <= 10000; i++ {
 
-		dense1.Forward(chp3.X3)
+		dense1.Forward(ml.X3)
 		activation1.Forward(dense1.Output)
 		dropout1.Forward(activation1.Output)
 		dense2.Forward(dropout1.Output)
-		lossActiovatoin.Forward(dense2.Output, chp3.Yval3)
+		lossActiovatoin.Forward(dense2.Output, ml.Yval3)
 
 		/////// calculate accuracy
 		predictions, _ := tensor.Argmax(lossActiovatoin.ActivationSoftMax.Output, 1)
-		accuracy = chp5.Accuracy(predictions.Data().([]int), chp3.Yval3.Data().([]float64))
+		accuracy = ml.Accuracy(predictions.Data().([]int), ml.Yval3.Data().([]float64))
 
 		//calc regularize loss
 		regularizationLoss := lossActiovatoin.Loss.RegularizationLoss(dense1) + lossActiovatoin.Loss.RegularizationLoss(dense2)
@@ -42,7 +39,7 @@ func RunDropoutFunc1() {
 		////// backward
 		//fmt.Println(lossActiovatoin.ActivationSoftMax.Output, lossActiovatoin.Loss.DInputs)
 
-		lossActiovatoin.Backward(lossActiovatoin.ActivationSoftMax.Output, chp3.Yval3)
+		lossActiovatoin.Backward(lossActiovatoin.ActivationSoftMax.Output, ml.Yval3)
 
 		dense2.Backward(lossActiovatoin.DInputs)
 		dropout1.Backward(dense2.DInput)
@@ -70,13 +67,13 @@ func RunDropoutFunc1() {
 	//fmt.Println("d1 b", dense1.Biases)
 	//fmt.Println("d2 b", dense2.Biases)
 
-	dense1.Forward(chp3.X3)
+	dense1.Forward(ml.X3)
 	activation1.Forward(dense1.Output)
 	dense2.Forward(activation1.Output)
-	lossActiovatoin.Forward(dense2.Output, chp3.Yval3)
+	lossActiovatoin.Forward(dense2.Output, ml.Yval3)
 
 	predictions, _ := tensor.Argmax(lossActiovatoin.ActivationSoftMax.Output, 1)
-	accuracy = chp5.Accuracy(predictions.Data().([]int), chp3.Yval3.Data().([]float64))
+	accuracy = ml.Accuracy(predictions.Data().([]int), ml.Yval3.Data().([]float64))
 
 	fmt.Println("loss for new data", lossActiovatoin.Loss.DataLoss)
 	fmt.Println("acc for new data", accuracy)

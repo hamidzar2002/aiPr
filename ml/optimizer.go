@@ -1,11 +1,16 @@
-package chp10
+package ml
 
 import (
-	"aiPr/chp3"
 	"fmt"
 	"gorgonia.org/tensor"
 	"math"
 )
+
+type Optimizer interface {
+	UpdateParams(layer *LayerDense) *LayerDense
+	PreUpdateParams()
+	PostUpdateParams()
+}
 
 type OptimizerSGD struct {
 	LearningRate        float64
@@ -15,8 +20,8 @@ type OptimizerSGD struct {
 	Momentum            float64
 }
 
-func NewOptimizerSGD(learningRate, decay, momentum float64) OptimizerSGD {
-	return OptimizerSGD{
+func NewOptimizerSGD(learningRate, decay, momentum float64) *OptimizerSGD {
+	return &OptimizerSGD{
 		LearningRate:        learningRate,
 		CurrentLearningRate: learningRate,
 		Decay:               decay,
@@ -25,7 +30,7 @@ func NewOptimizerSGD(learningRate, decay, momentum float64) OptimizerSGD {
 	}
 }
 
-func (o *OptimizerSGD) UpdateParams(layer chp3.LayerDense) chp3.LayerDense {
+func (o *OptimizerSGD) UpdateParams(layer *LayerDense) *LayerDense {
 
 	var err error
 	var weightUpdates *tensor.Dense
@@ -103,8 +108,8 @@ type OptimizerAdagrad struct {
 	Epsilon             float64
 }
 
-func NewOptimizerAdagrad(learningRate, decay, epsilon float64) OptimizerAdagrad {
-	return OptimizerAdagrad{
+func NewOptimizerAdagrad(learningRate, decay, epsilon float64) *OptimizerAdagrad {
+	return &OptimizerAdagrad{
 		LearningRate:        learningRate,
 		CurrentLearningRate: learningRate,
 		Decay:               decay,
@@ -113,7 +118,7 @@ func NewOptimizerAdagrad(learningRate, decay, epsilon float64) OptimizerAdagrad 
 	}
 }
 
-func (oa *OptimizerAdagrad) UpdateParams(layer chp3.LayerDense) chp3.LayerDense {
+func (oa *OptimizerAdagrad) UpdateParams(layer *LayerDense) *LayerDense {
 
 	var err error
 	if oa.Epsilon == 0 {
@@ -184,8 +189,8 @@ type OptimizerRMSprop struct {
 	Rho                 float64
 }
 
-func NewOptimizerRMSprop(learningRate, decay, epsilon, rho float64) OptimizerRMSprop {
-	return OptimizerRMSprop{
+func NewOptimizerRMSprop(learningRate, decay, epsilon, rho float64) *OptimizerRMSprop {
+	return &OptimizerRMSprop{
 		LearningRate:        learningRate,
 		CurrentLearningRate: learningRate,
 		Decay:               decay,
@@ -195,7 +200,7 @@ func NewOptimizerRMSprop(learningRate, decay, epsilon, rho float64) OptimizerRMS
 	}
 }
 
-func (or *OptimizerRMSprop) UpdateParams(layer chp3.LayerDense) chp3.LayerDense {
+func (or *OptimizerRMSprop) UpdateParams(layer *LayerDense) *LayerDense {
 
 	var err error
 
@@ -301,7 +306,7 @@ func (optimizer *OptimizerAdam) PreUpdateParams() {
 	}
 }
 
-func (optimizer *OptimizerAdam) UpdateParams(layer chp3.LayerDense) chp3.LayerDense {
+func (optimizer *OptimizerAdam) UpdateParams(layer *LayerDense) *LayerDense {
 	var WeightMomentumsBk, WeightCacheBk []float64
 	if layer.WeightMomentums == nil {
 		WeightMomentumsBk = make([]float64, len(layer.Weights.Data().([]float64)))

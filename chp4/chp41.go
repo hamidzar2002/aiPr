@@ -1,7 +1,6 @@
 package chp4
 
 import (
-	chp3 "aiPr/chp3"
 	"fmt"
 	"gorgonia.org/tensor"
 	"math"
@@ -25,10 +24,10 @@ func RunReLUfunc1() {
 }
 
 func RunReLUfuncDense() {
-	dense1 := chp3.NewLayerDense(2, 3)
+	dense1 := ml.NewLayerDense(2, 3)
 	activation1 := NewActivationReLU()
 
-	dense1.Forward(chp3.X)
+	dense1.Forward(ml.X)
 	activation1.Forward(dense1.Output)
 	fmt.Println(activation1.Output)
 

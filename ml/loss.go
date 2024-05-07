@@ -1,7 +1,6 @@
-package chp5
+package ml
 
 import (
-	"fmt"
 	"gorgonia.org/tensor"
 	"math"
 )
@@ -18,7 +17,7 @@ type NormalLoss struct {
 	DataLoss float64
 }
 type ActivationSoftmaxLoss struct {
-	ActivationSoftMax *ml.ActivationSoftMax
+	ActivationSoftMax *ActivationSoftMax
 	Loss              NormalLoss
 	DInputs           tensor.Tensor
 }
@@ -120,7 +119,7 @@ func (l *NormalLoss) Backward(dvalues tensor.Tensor, yTrue tensor.Tensor) {
 	l.DInputs = dinputs.Clone().(tensor.Tensor)
 	//return dinputs.Data().([]float64)
 }
-func (l *NormalLoss) RegularizationLoss(layer ml.LayerDense) float64 {
+func (l *NormalLoss) RegularizationLoss(layer *LayerDense) float64 {
 	var regularizationLoss float64
 
 	// L1 regularization - weights
@@ -157,11 +156,11 @@ func (l *NormalLoss) RegularizationLoss(layer ml.LayerDense) float64 {
 func NewActivationSoftmaxLoss() *ActivationSoftmaxLoss {
 
 	var loss NormalLoss
-	return &ActivationSoftmaxLoss{ActivationSoftMax: ml.NewActivationSoftMax(), Loss: loss}
+	return &ActivationSoftmaxLoss{ActivationSoftMax: NewActivationSoftMax(), Loss: loss}
 }
 
 func (ASL *ActivationSoftmaxLoss) Forward(input tensor.Tensor, yTrue tensor.Tensor) float64 {
-	ASL.ActivationSoftMax.Forward(input, 1)
+	ASL.ActivationSoftMax.Forward(input)
 	return ASL.Loss.Calculate(ASL.ActivationSoftMax.Output, yTrue)
 
 }
@@ -367,12 +366,6 @@ func Eye(n int, y []float64) *tensor.Dense {
 	return ey
 }
 
-func handleErr(er error) {
-	if er != nil {
-		fmt.Println("error", er)
-	}
-}
-
 func Accuracy(predictions []int, y []float64) float64 {
 	var correct int
 	for i, pred := range predictions {
@@ -408,18 +401,6 @@ func clip(yPred tensor.Tensor, lower, upper float64) tensor.Tensor {
 		}
 	}
 	return tensor.New(tensor.WithShape(yPred.Shape()...), tensor.WithBacking(clipped))
-}
-
-func TensorToFloat64Slice(t *tensor.Dense) [][]float64 {
-	data := make([][]float64, t.Shape()[0])
-	for i := 0; i < t.Shape()[0]; i++ {
-		data[i] = make([]float64, t.Shape()[1])
-		for j := 0; j < t.Shape()[1]; j++ {
-			n, _ := t.At(i, j)
-			data[i][j] = n.(float64)
-		}
-	}
-	return data
 }
 
 func Threshold(t tensor.Tensor, threshold float64) *tensor.Dense {

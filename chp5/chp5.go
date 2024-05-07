@@ -1,8 +1,7 @@
 package chp5
 
 import (
-	"aiPr/chp3"
-	"aiPr/chp4"
+	"aiPr/ml"
 	"fmt"
 	"gorgonia.org/tensor"
 	"math"
@@ -149,24 +148,24 @@ func RunLossFunc4() {
 		tensor.WithBacking(classTargetsBacking),
 		tensor.WithShape(3, 3),
 	)
-	loss := Loss{}
+	loss := NormalLoss{}
 	loss.Calculate(softmaxOutput, classTargets)
 }
 func RunLossFunc5() {
 
 	//layer 1
-	dense1 := chp3.NewLayerDense(2, 3)
-	activation1 := chp4.NewActivationReLU()
+	dense1 := ml.NewLayerDense(2, 3)
+	activation1 := ml.NewActivationReLU()
 	//layer 2
-	dense2 := chp3.NewLayerDense(3, 3)
-	activation2 := chp4.NewActivationSoftMax()
-	loss := Loss{}
-	dense1.Forward(chp3.X)
+	dense2 := ml.NewLayerDense(3, 3)
+	activation2 := ml.NewActivationSoftMax()
+	loss := NormalLoss{}
+	dense1.Forward(ml.X)
 	activation1.Forward(dense1.Output)
 	dense2.Forward(activation1.Output)
-	activation2.Forward(dense2.Output, 1)
+	activation2.Forward(dense2.Output)
 	fmt.Println(activation2.Output)
 
-	lss := loss.Calculate(activation2.Output, chp3.Yval)
+	lss := loss.Calculate(activation2.Output, ml.Yval)
 	fmt.Println(lss)
 }

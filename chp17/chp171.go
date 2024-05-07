@@ -1,10 +1,7 @@
 package chp17
 
 import (
-	"aiPr/chp10"
-	"aiPr/chp3"
-	"aiPr/chp4"
-	"aiPr/chp5"
+	"aiPr/ml"
 	"fmt"
 	"gorgonia.org/tensor"
 )
@@ -13,25 +10,25 @@ func RunLinearActFunc2() {
 
 	///////forwarding
 	//layer 1
-	//dense1 := chp3.NewLayerDense(1, 64, 0, 5e-4, 0, 5e-4)
-	dense1 := chp3.NewLayerDense(1, 64, 0, 0, 0, 0)
-	activation1 := chp4.NewActivationReLU()
+	//dense1 := ml.NewLayerDense(1, 64, 0, 5e-4, 0, 5e-4)
+	dense1 := ml.NewLayerDense(1, 64, 0, 0, 0, 0)
+	activation1 := ml.NewActivationReLU()
 
 	//layer 2
-	dense2 := chp3.NewLayerDense(64, 1)
-	activation2 := chp4.NewActivationLinear()
-	lossFunction := chp5.NewMeanSquaredErrorLoss()
-	optimizer := chp10.NewOptimizerAdam(0.02, 5e-7, 1e-7, 0.9, 0.999)
-	accuracyPrecision := chp5.StdDev(chp3.YR.Data().([]float64)) / 250
+	dense2 := ml.NewLayerDense(64, 1)
+	activation2 := ml.NewActivationLinear()
+	lossFunction := ml.NewMeanSquaredErrorLoss()
+	optimizer := ml.NewOptimizerAdam(0.02, 5e-7, 1e-7, 0.9, 0.999)
+	accuracyPrecision := ml.StdDev(ml.YR.Data().([]float64)) / 250
 	//optimizer2 := NewOptimizerAdam(0.02, 5e-7, 1e-7, 0.009, 0.000999)
 	var accuracy = float64(0)
 	for i := 1; i <= 10001; i++ {
 
-		dense1.Forward(chp3.XR)
+		dense1.Forward(ml.XR)
 		activation1.Forward(dense1.Output)
 		dense2.Forward(activation1.Output)
 		activation2.Forward(dense2.Output)
-		dataLoss := lossFunction.Forward(activation2.Outputs, chp3.YR)
+		dataLoss := lossFunction.Forward(activation2.Outputs, ml.YR)
 		//calc regularize loss
 		regularizationLoss := lossFunction.Loss.RegularizationLoss(dense1) + lossFunction.Loss.RegularizationLoss(dense2)
 		loss := dataLoss + regularizationLoss
@@ -39,8 +36,8 @@ func RunLinearActFunc2() {
 		/////// calculate accuracy
 		predictions := activation2.Outputs.(tensor.Tensor)
 
-		ytens := chp3.YR.Clone().(*tensor.Dense)
-		accuracy = chp5.AccuracyByRegression(predictions, ytens, accuracyPrecision)
+		ytens := ml.YR.Clone().(*tensor.Dense)
+		accuracy = ml.AccuracyByRegression(predictions, ytens, accuracyPrecision)
 
 		if i%100 == 0 {
 			fmt.Println("step", i)
@@ -53,7 +50,7 @@ func RunLinearActFunc2() {
 		}
 
 		////// backward
-		lossFunction.Backward(activation2.Outputs, chp3.YR)
+		lossFunction.Backward(activation2.Outputs, ml.YR)
 		activation2.Backward(lossFunction.DInputs)
 		dense2.Backward(activation2.DInputs)
 		activation1.Backward(dense2.DInput)
@@ -73,29 +70,29 @@ func RunLinearActFunc3() {
 
 	///////forwarding
 	//layer 1
-	//dense1 := chp3.NewLayerDense(1, 64, 0, 5e-4, 0, 5e-4)
-	dense1 := chp3.NewLayerDense(1, 64, 0, 0, 0, 0)
-	activation1 := chp4.NewActivationReLU()
+	//dense1 := ml.NewLayerDense(1, 64, 0, 5e-4, 0, 5e-4)
+	dense1 := ml.NewLayerDense(1, 64, 0, 0, 0, 0)
+	activation1 := ml.NewActivationReLU()
 
 	//layer 2
-	dense2 := chp3.NewLayerDense(64, 64)
-	activation2 := chp4.NewActivationReLU()
-	dense3 := chp3.NewLayerDense(64, 1)
-	activation3 := chp4.NewActivationLinear()
-	lossFunction := chp5.NewMeanSquaredErrorLoss()
-	optimizer := chp10.NewOptimizerAdam(0.01, 1e-3, 1e-7, 0.9, 0.999)
-	accuracyPrecision := chp5.StdDev(chp3.YR.Data().([]float64)) / 250
+	dense2 := ml.NewLayerDense(64, 64)
+	activation2 := ml.NewActivationReLU()
+	dense3 := ml.NewLayerDense(64, 1)
+	activation3 := ml.NewActivationLinear()
+	lossFunction := ml.NewMeanSquaredErrorLoss()
+	optimizer := ml.NewOptimizerAdam(0.01, 1e-3, 1e-7, 0.9, 0.999)
+	accuracyPrecision := ml.StdDev(ml.YR.Data().([]float64)) / 250
 	//optimizer2 := NewOptimizerAdam(0.02, 5e-7, 1e-7, 0.009, 0.000999)
 	var accuracy = float64(0)
 	for i := 1; i <= 10001; i++ {
 
-		dense1.Forward(chp3.XR)
+		dense1.Forward(ml.XR)
 		activation1.Forward(dense1.Output)
 		dense2.Forward(activation1.Output)
 		activation2.Forward(dense2.Output)
 		dense3.Forward(activation2.Output)
 		activation3.Forward(dense3.Output)
-		dataLoss := lossFunction.Forward(activation3.Outputs, chp3.YR)
+		dataLoss := lossFunction.Forward(activation3.Outputs, ml.YR)
 		//calc regularize loss
 		regularizationLoss := lossFunction.Loss.RegularizationLoss(dense1) + lossFunction.Loss.RegularizationLoss(dense2) + lossFunction.Loss.RegularizationLoss(dense3)
 		loss := dataLoss + regularizationLoss
@@ -103,8 +100,8 @@ func RunLinearActFunc3() {
 		/////// calculate accuracy
 		predictions := activation3.Outputs.(tensor.Tensor)
 
-		ytens := chp3.YR.Clone().(*tensor.Dense)
-		accuracy = chp5.AccuracyByRegression(predictions, ytens, accuracyPrecision)
+		ytens := ml.YR.Clone().(*tensor.Dense)
+		accuracy = ml.AccuracyByRegression(predictions, ytens, accuracyPrecision)
 
 		if i%100 == 0 {
 			fmt.Println("step", i)
@@ -117,7 +114,7 @@ func RunLinearActFunc3() {
 		}
 
 		////// backward
-		lossFunction.Backward(activation3.Outputs, chp3.YR)
+		lossFunction.Backward(activation3.Outputs, ml.YR)
 		activation3.Backward(lossFunction.DInputs)
 		dense3.Backward(activation3.DInputs)
 		activation2.Backward(dense3.DInput)

@@ -1,7 +1,7 @@
 package chp4
 
 import (
-	chp3 "aiPr/chp3"
+	"aiPr/ml"
 	"fmt"
 	"math"
 	"time"
@@ -13,11 +13,11 @@ func RunSoftmax1() {
 		fmt.Println(" chapter 4 softmax 1 total took : ", time.Since(timer))
 	}(time.Now())
 
-	dense1 := chp3.NewLayerDense(2, 3)
+	dense1 := ml.NewLayerDense(2, 3)
 	activation1 := NewActivationReLU()
 	_, _ = dense1, activation1
 	fmt.Println()
-	//dense1.Forward(chp3.X)
+	//dense1.Forward(ml.X)
 	//activation1.Forward(dense1.Output)
 	//fmt.Println(activation1.Output)
 
@@ -43,10 +43,10 @@ func RunSoftmax2() {
 		fmt.Println(" chapter 4 softmax 2 total took : ", time.Since(timer))
 	}(time.Now())
 
-	dense1 := chp3.NewLayerDense(2, 3)
+	dense1 := ml.NewLayerDense(2, 3)
 	activation1 := NewActivationReLU()
 	_, _ = dense1, activation1
-	//dense1.Forward(chp3.X)
+	//dense1.Forward(ml.X)
 	//activation1.Forward(dense1.Output)
 	//fmt.Println(activation1.Output)
 
@@ -109,17 +109,17 @@ func RunSoftmax3() {
 	}(time.Now())
 
 	//layer 1
-	dense1 := chp3.NewLayerDense(2, 3)
+	dense1 := ml.NewLayerDense(2, 3)
 	activation1 := NewActivationReLU()
 	//layer 2
-	dense2 := chp3.NewLayerDense(3, 3)
+	dense2 := ml.NewLayerDense(3, 3)
 	activation2 := NewActivationSoftMax()
 
-	dense1.Forward(chp3.X)
+	dense1.Forward(ml.X)
 	activation1.Forward(dense1.Output)
 
 	dense2.Forward(activation1.Output)
-	activation2.Forward(dense2.Output, 1)
+	activation2.Forward(dense2.Output)
 
 	fmt.Println(activation2.Output)
 

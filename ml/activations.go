@@ -1,4 +1,4 @@
-package chp4
+package ml
 
 import (
 	"fmt"
@@ -6,16 +6,37 @@ import (
 	"math"
 )
 
+type ActivationLinear struct {
+	Outputs tensor.Tensor
+	DInputs tensor.Tensor
+	Inputs  tensor.Tensor
+}
+
+func NewActivationLinear() *ActivationLinear {
+	return &ActivationLinear{Outputs: tensor.New(tensor.Of(tensor.Float64))}
+}
+
+func (al *ActivationLinear) Forward(input tensor.Tensor) {
+	al.Inputs = input
+	al.Outputs = input
+}
+func (al *ActivationLinear) Backward(dValues tensor.Tensor) {
+	al.DInputs = dValues.Clone().(tensor.Tensor)
+
+}
+func (al *ActivationLinear) GetOutput() *tensor.Tensor {
+	return &al.Outputs
+}
+
 type ActivationReLU struct {
 	Output tensor.Tensor
 	Input  tensor.Tensor
 	DInput tensor.Tensor
 }
 
-func NewActivationReLU() ActivationReLU {
-	return ActivationReLU{Output: tensor.New(tensor.Of(tensor.Float64))}
+func NewActivationReLU() *ActivationReLU {
+	return &ActivationReLU{Output: tensor.New(tensor.Of(tensor.Float64))}
 }
-
 func (r *ActivationReLU) Forward(input tensor.Tensor) {
 
 	zeros := tensor.New(tensor.WithShape(input.Shape()...), tensor.Of(tensor.Float64))
@@ -28,7 +49,6 @@ func (r *ActivationReLU) Forward(input tensor.Tensor) {
 	r.Output = output.Clone().(tensor.Tensor)
 	r.Input = input.Clone().(tensor.Tensor)
 }
-
 func (r *ActivationReLU) Backward(dvalues tensor.Tensor) {
 
 	var err error
@@ -48,33 +68,41 @@ func (r *ActivationReLU) Backward(dvalues tensor.Tensor) {
 	}
 	r.DInput = drelu.Clone().(tensor.Tensor)
 }
+func (r *ActivationReLU) GetOutput() *tensor.Tensor {
+	return &r.Output
+}
 
 type ActivationSoftMax struct {
 	Output tensor.Tensor
+	Input  tensor.Tensor
 	DInput tensor.Tensor
 }
 
-func NewActivationSoftMax() ActivationSoftMax {
-	return ActivationSoftMax{Output: tensor.New(tensor.Of(tensor.Float64))}
+func NewActivationSoftMax() *ActivationSoftMax {
+	return &ActivationSoftMax{Output: tensor.New(tensor.Of(tensor.Float64))}
 }
 
-func (s *ActivationSoftMax) Forward(input tensor.Tensor, axis int) {
+func (s *ActivationSoftMax) Forward(input tensor.Tensor) {
 
-	output, err := tensor.SoftMax(input, axis)
+	output, err := tensor.SoftMax(input, 1)
 	if err != nil {
 		fmt.Println("error", err)
 		return
 	}
 	s.Output = output.Clone().(tensor.Tensor)
+	s.Input = input
 }
-func (s *ActivationSoftMax) Backward(input tensor.Tensor, grad tensor.Tensor, axis int) {
+func (s *ActivationSoftMax) Backward(dvalues tensor.Tensor) {
 
-	input, err := tensor.SoftMaxB(input, grad, axis)
+	input, err := tensor.SoftMaxB(s.Input, dvalues, 1)
 	if err != nil {
 		fmt.Println("error", err)
 		return
 	}
 	s.DInput = input.Clone().(tensor.Tensor)
+}
+func (s *ActivationSoftMax) GetOutput() *tensor.Tensor {
+	return &s.Output
 }
 
 type ActivationSigmoid struct {
@@ -83,8 +111,8 @@ type ActivationSigmoid struct {
 	Inputs  tensor.Tensor
 }
 
-func NewActivationSigmoid() ActivationSigmoid {
-	return ActivationSigmoid{Outputs: tensor.New(tensor.Of(tensor.Float64))}
+func NewActivationSigmoid() *ActivationSigmoid {
+	return &ActivationSigmoid{Outputs: tensor.New(tensor.Of(tensor.Float64))}
 }
 
 func (as *ActivationSigmoid) Forward(input tensor.Tensor) {
@@ -110,22 +138,6 @@ func (as *ActivationSigmoid) Backward(dValues tensor.Tensor) {
 	}
 	as.DInputs = tensor.New(tensor.WithShape(dValues.Shape()...), tensor.WithBacking(DInputsBk))
 }
-
-type ActivationLinear struct {
-	Outputs tensor.Tensor
-	DInputs tensor.Tensor
-	Inputs  tensor.Tensor
-}
-
-func NewActivationLinear() ActivationLinear {
-	return ActivationLinear{Outputs: tensor.New(tensor.Of(tensor.Float64))}
-}
-
-func (as *ActivationLinear) Forward(input tensor.Tensor) {
-	as.Inputs = input
-	as.Outputs = input
-}
-func (as *ActivationLinear) Backward(dValues tensor.Tensor) {
-	as.DInputs = dValues.Clone().(tensor.Tensor)
-
+func (as *ActivationSigmoid) GetOutput() *tensor.Tensor {
+	return &as.Outputs
 }
