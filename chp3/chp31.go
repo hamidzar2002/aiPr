@@ -1,7 +1,7 @@
 package chp3
 
 import (
-	chp2 "aiPr/chp2"
+	"aiPr/ml"
 	"fmt"
 	t "gorgonia.org/tensor"
 	"time"
@@ -41,11 +41,11 @@ func RunChp3InnerLayer() {
 
 	//forward  pass
 	dot1, _ := t.Dot(inputs, weights1)
-	output1, _ := chp2.AddBiases(dot1, bias1)
+	output1, _ := ml.AddBiases(dot1, bias1)
 	fmt.Println("output1 ::>", output1)
 
 	dot2, _ := t.Dot(output1, weights2)
-	output2, _ := chp2.AddBiases(dot2, bias2)
+	output2, _ := ml.AddBiases(dot2, bias2)
 	fmt.Println("output2 ::>", output2)
 
 	return
